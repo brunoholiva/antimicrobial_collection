@@ -45,7 +45,7 @@ class DataFrameSmilesProcessor:
 
         logger.info("Removing duplicates based on standardized SMILES.")
         valid_df = valid_df.drop_duplicates(subset='standardized_smiles', keep='first')
-        logger.success(f"Duplicate removal completed. {len(valid_df)} unique entries retained.")
+        logger.success(f"Duplicate removal completed. {len(valid_df)} unique entries retained, from {len(processed_df)} original entries.")
 
         return valid_df
     
