@@ -47,6 +47,9 @@ class DataFrameSmilesProcessor:
         valid_df = valid_df.drop_duplicates(subset='standardized_smiles', keep='first')
         logger.success(f"Duplicate removal completed. {len(valid_df)} unique entries retained, from {len(processed_df)} original entries.")
 
+        cols_to_keep = ['antimicrobial_activity', 'standardized_smiles', 'target','source']
+        valid_df = valid_df[[col for col in cols_to_keep if col in valid_df.columns]]
+
         return valid_df
     
 def save_processed_df(df, name):
