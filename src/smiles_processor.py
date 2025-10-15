@@ -29,14 +29,7 @@ class DataFrameSmilesProcessor:
         # 2. Standardize SMILES
         logger.info(f"Starting SMILES standardization of {len(valid_df)} entries.")
 
-        def safe_standardize(smiles): # done this way to catch tautomer enumeration errors
-            try:
-                return self.standardizer.standardize_smiles(smiles)
-            except Exception as e:
-                logger.error(f"Standardization failed for SMILES: {smiles} | Error: {e}")
-                return None
-
-        valid_df['standardized_smiles'] = valid_df[smiles_column].apply(safe_standardize)
+        valid_df['standardized_smiles'] = valid_df[smiles_column].apply(self.standardizer.standardize_smiles)
         valid_df['is_valid'] = valid_df['standardized_smiles'].apply(self.validator.is_valid)
 
         num_invalid_after_std = len(valid_df) - valid_df['is_valid'].sum()

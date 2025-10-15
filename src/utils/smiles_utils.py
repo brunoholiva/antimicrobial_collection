@@ -30,7 +30,7 @@ class Standardizer:
         self.tautomer_enumerator = rdMolStandardize.TautomerEnumerator()
 
 
-    def standardize_mol(self, mol:Chem.Mol) -> Chem.Mol:
+    def standardize_mol(self, mol:Chem.Mol, remove_stereo: bool = True) -> Chem.Mol:
         """
         Standardize a molecule using RDKit's MolStandardize module.
         """
@@ -42,15 +42,22 @@ class Standardizer:
         uncharged_clean_molecule = self.uncharger.uncharge(parent_clean_molecule)
         tautomer_uncharged_clean_molecule = self.tautomer_enumerator.Canonicalize(uncharged_clean_molecule)
 
-        return tautomer_uncharged_clean_molecule
-    
+        if remove_stereo:
+            Chem.RemoveStereochemistry(tautomer_uncharged_clean_molecule)
 
-    def standardize_smiles(self, smiles:str) -> str:
+        return tautomer_uncharged_clean_molecule
+
+    def standardize_smiles(self, smiles: str, remove_stereo: bool = True) -> str:
         """
-        Standardize a SMILES string.
+        Standardize a SMILES string. Returns None if standardization fails.
         """
-        molecule = Chem.MolFromSmiles(smiles)
-        if molecule:
-            standardized_molecule = self.standardize_mol(molecule)
-            return Chem.MolToSmiles(standardized_molecule)
-        return None
+        try:
+            molecule = Chem.MolFromSmiles(smiles)
+            if molecule:
+                standardized_molecule = self.standardize_mol(molecule, remove_stereo)
+                return Chem.MolToSmiles(standardized_molecule)
+            return None
+        except Exception as e:
+            from loguru import logger
+            logger.error(f"Standardization failed for SMILES: {smiles} | Error: {e}")
+            return None
