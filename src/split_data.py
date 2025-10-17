@@ -9,6 +9,8 @@ from rdkit.ML.Cluster import Butina
 from src.utils.chemical_representations import get_morgan_fingerprint
 import deepchem as dc
 from joblib import Parallel, delayed
+from tqdm import tqdm
+from scipy.spatial.distance import pdist
 
 
 def random_split(
@@ -104,29 +106,23 @@ def murcko_scaffold_split(
     return train_df, test_df
 
 
-def calculate_tanimoto_distances(
-    fingerprint_list: list[Chem.DataStructs.ExplicitBitVect], n_jobs: int = 10
-) -> list[float]:
+def calculate_tanimoto_distances(fingerprint_list: list) -> np.ndarray:
     """
-    Calculates pairwise Tanimoto distances for a list of RDKit fingerprints (memory efficient).
+    Calculates the Tanimoto distance matrix using scipy's pdist.
 
     Args:
-        fingerprint_list: List of RDKit fingerprint objects.
+        fingerprint_list: A list of RDKit ExplicitBitVect objects.
 
     Returns:
-        distances: List of pairwise Tanimoto distances.
+        A 1D numpy array containing the condensed pairwise Tanimoto distances.
     """
-    n = len(fingerprint_list)
+    if not fingerprint_list:
+        return np.array([])
 
-    def pair(i, j):
-        return 1 - DataStructs.TanimotoSimilarity(
-            fingerprint_list[i], fingerprint_list[j]
-        )
+    np_fps = np.array([list(fp) for fp in fingerprint_list], dtype=bool)
 
-    distances = Parallel(n_jobs=n_jobs)(
-        delayed(pair)(i, j) for i in range(1, n) for j in range(i)
-    )
-    return distances
+    # Calculate pairwise Jaccard distances (equivalent to Tanimoto distance)
+    return pdist(np_fps, metric="jaccard")
 
 
 def butina_clustering(
