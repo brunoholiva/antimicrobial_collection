@@ -1,5 +1,5 @@
 from rdkit import Chem
-from rdkit.Chem import rdFingerprintGenerator
+from rdkit.Chem import rdFingerprintGenerator, MACCSkeys
 
 
 def get_morgan_fingerprint(
@@ -21,4 +21,19 @@ def get_morgan_fingerprint(
     molecule = Chem.MolFromSmiles(smiles)
     if molecule:
         fingerprint = morgan_generator.GetFingerprint(molecule)
+    return fingerprint
+
+
+def get_maccs_keys_fingerprint(smiles: str) -> Chem.DataStructs.ExplicitBitVect:
+    """
+    Generate a MACCS keys fingerprint from a SMILES string.
+    Args:
+        smiles: SMILES string.
+    Returns:
+        fingerprint: A Fingerprint (ExplicitBitVect)
+    """
+
+    molecule = Chem.MolFromSmiles(smiles)
+    if molecule:
+        fingerprint = MACCSkeys.GenMACCSKeys(molecule)
     return fingerprint
