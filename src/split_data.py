@@ -7,7 +7,6 @@ from rdkit.Chem.Scaffolds import MurckoScaffold
 from rdkit import DataStructs
 from rdkit.ML.Cluster import Butina
 from src.chemical_representations import get_morgan_fingerprint
-import deepchem as dc
 from scipy.spatial.distance import pdist
 
 
@@ -222,6 +221,7 @@ def maxmin_split(
         train_df: Training set DataFrame.
         test_df: Test set DataFrame.
     """
+    import deepchem as dc
 
     smiles = df[smiles_col].astype(str).values
     labels = df[activity_col].values
