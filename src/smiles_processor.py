@@ -85,6 +85,6 @@ class DataFrameSmilesProcessor:
         return valid_df
 
 
-def save_processed_df(df: pd.DataFrame, name: str):
+def save_processed_df(df: pd.DataFrame, name: str, path: str = "../data/processed/"):
     """Saves the processed DataFrame to a CSV file."""
-    df.to_csv(f"data/processed/{name}_processed.csv", index=False)
+    df.to_csv(f"{path}{name}_processed.csv", index=False)
