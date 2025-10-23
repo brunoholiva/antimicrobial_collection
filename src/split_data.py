@@ -6,10 +6,8 @@ from rdkit import Chem
 from rdkit.Chem.Scaffolds import MurckoScaffold
 from rdkit import DataStructs
 from rdkit.ML.Cluster import Butina
-from src.utils.chemical_representations import get_morgan_fingerprint
+from src.chemical_representations import get_morgan_fingerprint
 import deepchem as dc
-from joblib import Parallel, delayed
-from tqdm import tqdm
 from scipy.spatial.distance import pdist
 
 
