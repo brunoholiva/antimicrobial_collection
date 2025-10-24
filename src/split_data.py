@@ -237,12 +237,12 @@ def maxmin_split(
     train_df = (
         df[df["standardized_smiles"].astype(str).isin(train_dataset.ids)]
         .reset_index(drop=True)
-        .drop(columns=["scaffold", "cluster_id"])
+        #.drop(columns=["scaffold", "cluster_id"])
     )
     test_df = (
         df[df["standardized_smiles"].astype(str).isin(test_dataset.ids)]
         .reset_index(drop=True)
-        .drop(columns=["scaffold", "cluster_id"])
+        #.drop(columns=["scaffold", "cluster_id"])
     )
 
     return train_df, test_df
