@@ -14,7 +14,8 @@ def random_split(
     df: pd.DataFrame,
     test_size: float = 0.2,
     random_state: int = 333,
-    stratify_col: str = None,
+    activity_col: str = None,
+    smiles_col: str = "standardized_smiles"
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Splits a DataFrame into training and test sets using random sampling.
@@ -23,16 +24,18 @@ def random_split(
         df: A dataframe containing the data to be split.
         test_size: The proportion of the dataset to include in the test split.
         random_state: Random seed for reproducibility.
-        stratify_col: Column name to use for stratification. If None, no stratification is applied.
+        activity_col: Column name to use for stratification. If None, no stratification is applied.
     """
 
-    return train_test_split(
+    train_df, test_df = train_test_split(
         df,
         test_size=test_size,
         random_state=random_state,
         shuffle=True,
-        stratify=df[stratify_col] if stratify_col else None,
+        stratify=df[activity_col] if activity_col else None
     )
+    
+    return train_df, test_df
 
 
 def generate_murcko_scaffold(smiles: str) -> str:
