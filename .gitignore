@@ -5,3 +5,6 @@ sandbox*
 __pycache__
 coadd*
 co_add*
+.nextflow*
+work/
+results/
