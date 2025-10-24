@@ -3,7 +3,7 @@ from loguru import logger
 
 
 def deduplicate_smiles(
-    df: pd.DataFrame, rule: function, smiles_col: str = "standardized_smiles"
+    df: pd.DataFrame, rule, smiles_col: str = "standardized_smiles"
 ):
     """
     Deduplicate a DataFrame based on a SMILES column using a custom rule.
