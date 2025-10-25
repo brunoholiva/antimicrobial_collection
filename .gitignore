@@ -8,3 +8,4 @@ co_add*
 .nextflow*
 work/
 results/
+data/merged/
