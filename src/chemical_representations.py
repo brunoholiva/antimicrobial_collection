@@ -1,6 +1,6 @@
 from rdkit import Chem
 from rdkit.Chem import rdFingerprintGenerator, MACCSkeys
-
+import numpy as np
 
 def get_morgan_fingerprint(
     smiles: str, radius: int = 2, n_bits: int = 2048
@@ -37,3 +37,24 @@ def get_maccs_keys_fingerprint(smiles: str) -> Chem.DataStructs.ExplicitBitVect:
     if molecule:
         fingerprint = MACCSkeys.GenMACCSKeys(molecule)
     return fingerprint
+
+
+from molfeat.calc import RDKitDescriptors2D
+
+calc = RDKitDescriptors2D()
+
+
+def get_desc2d(smiles: str) -> np.ndarray:
+    """
+    Generate 2D descriptors from a SMILES string.
+    Args:
+        smiles: SMILES string.
+    
+    Returns:
+        descriptors: A numpy array of 2D descriptors.
+    """
+    molecule = Chem.MolFromSmiles(smiles)
+    if molecule:
+
+        descriptors = calc(molecule)
+    return descriptors
