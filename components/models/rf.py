@@ -1,8 +1,9 @@
 import argparse
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import RandomizedSearchCV
 import pandas as pd
 import joblib
-
+import numpy as np
 
 def main(args):
     train_df = pd.read_csv(args.train_csv)
@@ -12,11 +13,31 @@ def main(args):
 
     model = RandomForestClassifier(
         random_state=args.random_state,
-        n_jobs=args.n_jobs,
-        n_estimators=args.n_estimators,
-        class_weight="balanced"
+        class_weight="balanced_subsample"
     )
+    
+    param_grid = {
+        "n_estimators": [int(x) for x in np.linspace(start = 200, stop = 2000, num = 10)],
+        "max_features": ["sqrt", "log2"],
+        "max_depth": [int(x) for x in np.linspace(10, 110, num=11)],
+        "min_samples_split": [2, 5, 10],
+        "min_samples_leaf": [1, 2, 4],
+        "bootstrap": [True, False]
+    }
 
+    grid_search = RandomizedSearchCV(
+        estimator=model,
+        param_distributions=param_grid,
+        cv=2,
+        scoring="average_precision",
+        n_iter=500,
+        n_jobs=args.n_jobs,
+        verbose=2
+    )
+    
+    grid_search.fit(X_train, y_train)
+    model = grid_search.best_estimator_
+    
     model.fit(X_train, y_train)
 
     joblib.dump(model, args.output_model_path)
