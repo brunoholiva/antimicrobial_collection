@@ -1,7 +1,7 @@
 import argparse
 import pandas as pd
 import joblib
-from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score
+from sklearn.metrics import roc_auc_score, accuracy_score, precision_score, recall_score, average_precision_score
 
 
 def main(args):
@@ -19,6 +19,7 @@ def main(args):
         "test_accuracy": accuracy_score(y_test, y_pred_class),
         "test_precision": precision_score(y_test, y_pred_class),
         "test_recall": recall_score(y_test, y_pred_class),
+        "test_average_precision": average_precision_score(y_test, y_pred_proba)
     }
 
     results_data = {

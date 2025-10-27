@@ -36,6 +36,6 @@ workflow {
         name: "all_results_summary.csv",
         storeDir: "${params.outdir}/summary",
         skip: 1,
-        seed: "dataset,split,featurizer,model,evaluator,seed,test_auc,test_accuracy,test_precision,test_recall\n",
+        seed: "dataset,split,featurizer,model,evaluator,seed,test_auc,test_accuracy,test_precision,test_recall,test_average_precision\n",
     )
 }
