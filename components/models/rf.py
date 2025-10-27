@@ -19,7 +19,6 @@ def main(args):
     param_grid = {
         "n_estimators": [int(x) for x in np.linspace(start = 200, stop = 2000, num = 10)],
         "max_features": ["sqrt", "log2"],
-        "max_depth": [int(x) for x in np.linspace(10, 110, num=11)],
         "min_samples_split": [2, 5, 10],
         "min_samples_leaf": [1, 2, 4],
         "bootstrap": [True, False]
@@ -58,21 +57,16 @@ if __name__ == "__main__":
     parser.add_argument(
         "--random_state",
         type=int,
-        default=42,
+        default=333,
         help="Random seed for reproducibility.",
     )
     parser.add_argument(
         "--n_jobs",
         type=int,
-        default=-1,
+        default=1,
         help="Number of parallel jobs to run.",
     )
-    parser.add_argument(
-        "--n_estimators",
-        type=int,
-        default=100,
-        help="Number of trees in the random forest.",
-    )
+
 
     args = parser.parse_args()
     main(args)
