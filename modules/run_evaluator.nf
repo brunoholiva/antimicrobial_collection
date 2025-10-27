@@ -10,7 +10,7 @@ process RUN_EVALUATOR {
     output:
     path ("results.csv"), emit: results_csv
     path (trained_model), emit: published_model
-
+    path ("confusion_matrix.png"), emit: confusion_matrix
     script:
 
     def dataset_name = dataset.baseName
@@ -25,6 +25,8 @@ process RUN_EVALUATOR {
         --test_csv ${test_features} \\
         --activity_col ${params.activity_col} \\
         --output_results results.csv \\
+        --output_confusion_matrix confusion_matrix.png \\
+        --output_rocauc_plot roc_auc_curve.png \\
         --random_state ${params.random_state} \\
         --dataset_name ${dataset_name} \\
         --split_name ${splitter_name} \\
