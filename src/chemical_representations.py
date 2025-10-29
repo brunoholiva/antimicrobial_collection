@@ -3,7 +3,7 @@ from rdkit.Chem import rdFingerprintGenerator, MACCSkeys
 import numpy as np
 
 def get_morgan_fingerprint(
-    smiles: str, radius: int = 2, n_bits: int = 2048
+    smiles: str, radius: int = 2, n_bits: int = 1024
 ) -> Chem.DataStructs.ExplicitBitVect:
     """
     Generate a Morgan fingerprint from a SMILES string.
