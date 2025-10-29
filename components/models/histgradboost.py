@@ -26,7 +26,7 @@ def main(args):
     grid_search = RandomizedSearchCV(
         estimator=model,
         param_distributions=param_grid,
-        cv=2,
+        cv=10,
         scoring="average_precision",
         n_iter=500,
         n_jobs=args.n_jobs,
