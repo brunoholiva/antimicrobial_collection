@@ -14,6 +14,12 @@ def main(args):
     train_df = pd.read_csv(args.train_csv)
     test_df = pd.read_csv(args.test_csv)
 
+    # Remove activity column before featurization
+    train_activity = train_df[args.activity_col]
+    test_activity = test_df[args.activity_col]
+    train_df = train_df.drop(columns=[args.activity_col])
+    test_df = test_df.drop(columns=[args.activity_col])
+
     train_descriptors_list = []
     for smiles in train_df[args.smiles_col]:
         descriptor = get_desc2d(smiles)
@@ -43,12 +49,10 @@ def main(args):
     train_desc_scaled_df = pd.DataFrame(train_desc_scaled, columns=desc_cols)
     test_desc_scaled_df = pd.DataFrame(test_desc_scaled, columns=desc_cols)
 
-    train_output_df = pd.concat([train_df, train_desc_scaled_df], axis=1)
-    train_output_df = train_output_df.drop(columns=[args.smiles_col])
+    train_output_df = pd.concat([train_desc_scaled_df, train_activity.reset_index(drop=True)], axis=1)
     train_output_df.to_csv(args.train_output_csv, index=False)
 
-    test_output_df = pd.concat([test_df, test_desc_scaled_df], axis=1)
-    test_output_df = test_output_df.drop(columns=[args.smiles_col])
+    test_output_df = pd.concat([test_desc_scaled_df, test_activity.reset_index(drop=True)], axis=1)
     test_output_df.to_csv(args.test_output_csv, index=False)
 
 
@@ -75,6 +79,12 @@ if __name__ == "__main__":
         type=str,
         default="standardized_smiles",
         help="Column name for SMILES strings.",
+    )
+    parser.add_argument(
+        "--activity_col",
+        type=str,
+        default="antimicrobial_activity",
+        help="Column name for activity values.",
     )
     args = parser.parse_args()
     main(args)
