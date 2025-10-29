@@ -16,6 +16,7 @@ process RUN_TRAINER {
         --train_csv ${train_features} \\
         --activity_col ${params.activity_col} \\
         --output_model trained_model.joblib \\
-        --random_state ${params.random_state}
+        --random_state ${params.random_state} \\
+        --n_jobs ${task.cpus}
     """
 }
