@@ -18,9 +18,9 @@ workflow {
     ch_featurizers = channel.fromPath(params.featurizers)
     ch_models = channel.fromPath(params.models)
     ch_evaluators = channel.fromPath(params.evaluators)
+    ch_seeds = channel.from(params.random_state)
 
-
-    ch_for_splitting = ch_datasets.combine(ch_splitters)
+    ch_for_splitting = ch_datasets.combine(ch_splitters).combine(ch_seeds)
     RUN_SPLITTER(ch_for_splitting)
 
     ch_for_featurization = RUN_SPLITTER.out.splits.combine(ch_featurizers)
@@ -36,6 +36,6 @@ workflow {
         name: "all_results_summary.csv",
         storeDir: "${params.outdir}/summary",
         skip: 1,
-        seed: "dataset,split,featurizer,model,evaluator,seed,test_auc,test_accuracy,test_precision,test_recall,test_average_precision\n",
+        seed: "dataset,split,featurizer,model,evaluator,random_state,test_auc,test_accuracy,test_precision,test_recall,test_average_precision,test_brier_score\n"
     )
 }
