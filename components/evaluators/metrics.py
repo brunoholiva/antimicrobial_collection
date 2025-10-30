@@ -9,20 +9,39 @@ from sklearn.metrics import (
     average_precision_score,
     confusion_matrix,
     roc_curve,
+    brier_score_loss
 )
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 
 
 def main(args):
-    model = joblib.load(args.model_path)
+    model_or_ensemble = joblib.load(args.model_path)
+    
     test_df = pd.read_csv(args.test_csv)
 
     X_test = test_df.drop(columns=[args.activity_col])
     y_test = test_df[args.activity_col]
 
-    y_pred_proba = model.predict_proba(X_test)[:, 1]
-    y_pred_class = model.predict(X_test)
+
+    if isinstance(model_or_ensemble, list):
+        ensemble_models = model_or_ensemble
+        
+        all_probas = []
+        for model in ensemble_models:
+            y_proba_single = model.predict_proba(X_test)[:, 1]
+            all_probas.append(y_proba_single)
+            
+        y_pred_proba = np.mean(all_probas, axis=0)
+        
+        y_pred_class = (y_pred_proba > 0.5).astype(int)
+        
+    else:
+        model = model_or_ensemble
+        
+        y_pred_proba = model.predict_proba(X_test)[:, 1]
+        y_pred_class = model.predict(X_test)
 
     metrics = {
         "test_auc": roc_auc_score(y_test, y_pred_proba),
@@ -30,6 +49,7 @@ def main(args):
         "test_precision": precision_score(y_test, y_pred_class),
         "test_recall": recall_score(y_test, y_pred_class),
         "test_average_precision": average_precision_score(y_test, y_pred_proba),
+        "test_brier_score": brier_score_loss(y_test, y_pred_proba) # <-- New metric
     }
 
     results_data = {
@@ -44,7 +64,6 @@ def main(args):
 
     results_df = pd.DataFrame([results_data])
     results_df.to_csv(args.output_results, index=False)
-    print(f"Results saved to {args.output_results}")
 
     cm = confusion_matrix(y_test, y_pred_class)
     plt.figure(figsize=(8, 6))
@@ -72,7 +91,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Model Evaluation Metrics Calculator")
     parser.add_argument(
-        "--model_path", type=str, help="Path to the trained model file."
+        "--model_path", type=str, help="Path to the trained model (or ensemble) file."
     )
     parser.add_argument("--test_csv", type=str, help="Path to the test CSV file.")
     parser.add_argument(
@@ -106,5 +125,6 @@ if __name__ == "__main__":
         type=str,
         help="Path to save the ROC AUC plot.",
     )
+
     args = parser.parse_args()
     main(args)
