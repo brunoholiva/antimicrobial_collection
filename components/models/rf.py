@@ -5,45 +5,58 @@ import pandas as pd
 import joblib
 import numpy as np
 
+
 def main(args):
     train_df = pd.read_csv(args.train_csv)
 
     X_train = train_df.drop(columns=[args.activity_col])
     y_train = train_df[args.activity_col]
 
-    model = RandomForestClassifier(
-        random_state=args.random_state,
-        class_weight="balanced_subsample"
+    model_for_hpo = RandomForestClassifier(
+        random_state=args.random_state, class_weight="balanced"
     )
-    
+
     param_grid = {
-        "n_estimators": [int(x) for x in np.linspace(start = 200, stop = 2000, num = 10)],
+        "n_estimators": [int(x) for x in np.linspace(start=200, stop=2000, num=10)],
         "max_features": ["sqrt", "log2"],
         "min_samples_split": [2, 5, 10],
         "min_samples_leaf": [1, 2, 4],
-        "bootstrap": [True, False]
+        "bootstrap": [True, False],
     }
 
     grid_search = RandomizedSearchCV(
-        estimator=model,
+        estimator=model_for_hpo,
         param_distributions=param_grid,
-        cv=5,
+        cv=3,
         scoring="average_precision",
-        n_iter=500,
+        n_iter=100,
         n_jobs=args.n_jobs,
-        verbose=2
+        verbose=2,
     )
-    
-    grid_search.fit(X_train, y_train)
-    model = grid_search.best_estimator_
-    
-    model.fit(X_train, y_train)
 
-    joblib.dump(model, args.output_model_path)
+    grid_search.fit(X_train, y_train)
+    best_params = grid_search.best_params_
+
+    n_models = 5
+    ensemble_models = []
+
+    for i in range(n_models):
+        model_seed = args.random_state + i
+
+        model = RandomForestClassifier(
+            **best_params, random_state=model_seed, class_weight="balanced_subsample"
+        )
+
+        model.fit(X_train, y_train)
+        ensemble_models.append(model)
+
+    joblib.dump(ensemble_models, args.output_model_path)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Random Forest Classifier Trainer")
+    parser = argparse.ArgumentParser(
+        description="Train Random Forest ensemble model with hyperparameter optimization."
+    )
     parser.add_argument("--train_csv", type=str, help="Path to the training CSV file.")
     parser.add_argument(
         "--output_model_path", type=str, help="Path to save the trained model."
@@ -66,7 +79,6 @@ if __name__ == "__main__":
         default=1,
         help="Number of parallel jobs to run.",
     )
-
 
     args = parser.parse_args()
     main(args)

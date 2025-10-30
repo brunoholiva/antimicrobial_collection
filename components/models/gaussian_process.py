@@ -4,7 +4,7 @@ import pandas as pd
 import joblib
 import argparse
 
-# gaussian process classifier does not accept NaNs. So here, we just remove them naively.
+
 def main(args):
     train_df = pd.read_csv(args.train_csv)
 
@@ -22,9 +22,9 @@ def main(args):
     grid_search = RandomizedSearchCV(
         estimator=model,
         param_distributions=param_grid,
-        cv=5,
+        cv=3,
         scoring="average_precision",
-        n_iter=500,
+        n_iter=100,
         n_jobs=args.n_jobs,
         verbose=2,
     )
@@ -38,9 +38,7 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Gaussian Process Classifier Trainer"
-    )
+    parser = argparse.ArgumentParser(description="Gaussian Process Classifier Trainer")
     parser.add_argument("--train_csv", type=str, help="Path to the training CSV file.")
     parser.add_argument(
         "--output_model_path", type=str, help="Path to save the trained model."

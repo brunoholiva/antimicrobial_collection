@@ -11,7 +11,7 @@ def main(args):
     X_train = train_df.drop(columns=[args.activity_col])
     y_train = train_df[args.activity_col]
 
-    model = HistGradientBoostingClassifier(
+    model_for_hpo = HistGradientBoostingClassifier(
         random_state=args.random_state, class_weight="balanced"
     )
 
@@ -24,24 +24,37 @@ def main(args):
     }
 
     grid_search = RandomizedSearchCV(
-        estimator=model,
+        estimator=model_for_hpo,
         param_distributions=param_grid,
-        cv=5,
+        cv=3,
         scoring="average_precision",
-        n_iter=500,
+        n_iter=100,
         n_jobs=args.n_jobs,
         verbose=2,
     )
 
     grid_search.fit(X_train, y_train)
     model = grid_search.best_estimator_
-    model.fit(X_train, y_train)
-    joblib.dump(model, args.output_model_path)
+
+    n_models = 5
+    ensemble_models = []
+
+    for i in range(n_models):
+        model_seed = args.random_state + i
+
+        model = HistGradientBoostingClassifier(
+            **grid_search.best_params_, random_state=model_seed, class_weight="balanced"
+        )
+
+        model.fit(X_train, y_train)
+        ensemble_models.append(model)
+
+    joblib.dump(ensemble_models, args.output_model_path)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Histogram-based Gradient Boosting Classifier Trainer"
+        description="Histogram-based Gradient Boosting Classifier Ensemble Trainer"
     )
     parser.add_argument("--train_csv", type=str, help="Path to the training CSV file.")
     parser.add_argument(
