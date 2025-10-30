@@ -6,10 +6,10 @@ process RUN_SPLITTER {
     tag "Split ${dataset.baseName} - ${splitter.baseName}"
 
     input:
-    tuple val(dataset), val(splitter)
+    tuple val(dataset), val(splitter), val(seed)
 
     output:
-    tuple val(dataset), val(splitter), path("train_split.csv"), path("test_split.csv"), emit: splits
+    tuple val(dataset), val(splitter), val(seed), path("train_split.csv"), path("test_split.csv"), emit: splits
 
     script:
     """
@@ -19,6 +19,6 @@ process RUN_SPLITTER {
         --test_output_csv test_split.csv \\
         --smiles_col ${params.smiles_col} \\
         --activity_col ${params.activity_col} \\
-        --random_state ${params.random_state}
+        --random_state ${seed}
     """
 }

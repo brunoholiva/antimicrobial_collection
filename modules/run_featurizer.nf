@@ -5,10 +5,10 @@ process RUN_FEATURIZER {
     tag "Featurize: ${dataset.baseName} w/ ${featurizer.baseName}"
 
     input:
-    tuple val(dataset), val(splitter), path(train_split), path(test_split), val(featurizer)
+    tuple val(dataset), val(splitter), val(seed), path(train_split), path(test_split), val(featurizer)
 
     output:
-    tuple val(dataset), val(splitter), val(featurizer), path("train_features.csv"), path("test_features.csv"), emit: features
+    tuple val(dataset), val(splitter), val(seed), val(featurizer), path("train_features.csv"), path("test_features.csv"), emit: features
 
     script:
 

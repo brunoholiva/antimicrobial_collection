@@ -5,7 +5,7 @@ process RUN_EVALUATOR {
     publishDir "${params.outdir}/${dataset.baseName}_${splitter.baseName}_${featurizer.baseName}_${model.baseName}", mode: 'copy'
 
     input:
-    tuple val(dataset), val(splitter), val(featurizer), val(model), path(test_features), path(trained_model), val(evaluator)
+    tuple val(dataset), val(splitter), val(seed), val(featurizer), val(model), path(test_features), path(trained_model), val(evaluator)
 
     output:
     path ("results.csv"), emit: results_csv
@@ -27,7 +27,7 @@ process RUN_EVALUATOR {
         --output_results results.csv \\
         --output_confusion_matrix confusion_matrix.png \\
         --output_rocauc_plot roc_auc_curve.png \\
-        --random_state ${params.random_state} \\
+        --random_state ${seed} \\
         --dataset_name ${dataset_name} \\
         --split_name ${splitter_name} \\
         --featurizer_name ${featurizer_name} \\
