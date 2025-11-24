@@ -1,9 +1,13 @@
 import argparse
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import RandomizedSearchCV
+from sklearn.pipeline import Pipeline
+from sklearn.feature_selection import SelectKBest, VarianceThreshold, f_classif
+from skopt import BayesSearchCV
+from skopt.space import Integer, Categorical
 import pandas as pd
 import joblib
 import numpy as np
+
 
 def main(args):
     train_df = pd.read_csv(args.train_csv)
@@ -11,34 +15,39 @@ def main(args):
     X_train = train_df.drop(columns=[args.activity_col])
     y_train = train_df[args.activity_col]
 
-    model = RandomForestClassifier(
-        random_state=args.random_state,
-        class_weight="balanced_subsample"
+    pipeline = Pipeline(
+        [
+            ("variance", VarianceThreshold()),
+            ("select", SelectKBest(score_func=f_classif)),
+            (
+                "model",
+                RandomForestClassifier(
+                    random_state=args.random_state, class_weight="balanced"
+                ),
+            ),
+        ]
     )
-    
-    param_grid = {
-        "n_estimators": [int(x) for x in np.linspace(start = 200, stop = 2000, num = 10)],
-        "max_features": ["sqrt", "log2"],
-        "min_samples_split": [2, 5, 10],
-        "min_samples_leaf": [1, 2, 4],
-        "bootstrap": [True, False]
-    }
 
-    grid_search = RandomizedSearchCV(
-        estimator=model,
-        param_distributions=param_grid,
-        cv=10,
+    opt = BayesSearchCV(
+        estimator=pipeline,
+        search_spaces={
+            "select__k": Integer(64, 1024),
+            "model__n_estimators": Integer(100, 1000),
+            "model__max_depth": Integer(5, 50),
+            "model__min_samples_split": Integer(2, 10),
+            "model__min_samples_leaf": Integer(1, 4),
+            "model__bootstrap": Categorical([True, False]),
+            "model__max_features": Categorical(["sqrt", "log2"]),
+        },
         scoring="average_precision",
-        n_iter=500,
-        n_jobs=args.n_jobs,
-        verbose=2
+        cv=3,
+        n_iter=1000,
+        n_jobs=5,
     )
-    
-    grid_search.fit(X_train, y_train)
-    model = grid_search.best_estimator_
-    
-    model.fit(X_train, y_train)
 
+    opt.fit(X_train, y_train)
+    model = opt.best_estimator_
+    model.fit(X_train, y_train)
     joblib.dump(model, args.output_model_path)
 
 
@@ -66,7 +75,6 @@ if __name__ == "__main__":
         default=1,
         help="Number of parallel jobs to run.",
     )
-
 
     args = parser.parse_args()
     main(args)

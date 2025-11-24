@@ -1,46 +1,50 @@
 from sklearn.gaussian_process import GaussianProcessClassifier
-from sklearn.model_selection import RandomizedSearchCV
+from sklearn.feature_selection import SelectKBest, VarianceThreshold, f_classif
+from skopt import BayesSearchCV
+from skopt.space import Real, Integer, Categorical
+from sklearn.pipeline import Pipeline
 import pandas as pd
 import joblib
 import argparse
 
-# gaussian process classifier does not accept NaNs. So here, we just remove them naively.
+
 def main(args):
     train_df = pd.read_csv(args.train_csv)
 
     X_train = train_df.drop(columns=[args.activity_col])
     y_train = train_df[args.activity_col]
 
-    model = GaussianProcessClassifier(random_state=args.random_state)
+    pipeline = Pipeline(
+        [
+            ("variance", VarianceThreshold()),
+            ("select", SelectKBest(score_func=f_classif)),
+            ("model", GaussianProcessClassifier(random_state=args.random_state)),
+        ]
+    )
 
-    param_grid = {
-        "optimizer": ["fmin_l_bfgs_b", None],
-        "n_restarts_optimizer": [0, 1, 5],
-        "max_iter_predict": [50, 100, 200, 400],
-    }
-
-    grid_search = RandomizedSearchCV(
-        estimator=model,
-        param_distributions=param_grid,
-        cv=10,
+    opt = BayesSearchCV(
+        estimator=pipeline,
+        search_spaces={
+            "select__k": Integer(16, X_train.shape[1]),
+            "model__optimizer": Categorical(["fmin_l_bfgs_b", None]),
+            "model__max_iter_predict": Integer(50, 400),
+        },
+        cv=3,
+        n_iter=1000,
         scoring="average_precision",
-        n_iter=500,
         n_jobs=args.n_jobs,
         verbose=2,
     )
 
-    grid_search.fit(X_train, y_train)
 
-    model = grid_search.best_estimator_
+    opt.fit(X_train, y_train)
+    model = opt.best_estimator_
     model.fit(X_train, y_train)
-
     joblib.dump(model, args.output_model_path)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Gaussian Process Classifier Trainer"
-    )
+    parser = argparse.ArgumentParser(description="Gaussian Process Classifier Trainer")
     parser.add_argument("--train_csv", type=str, help="Path to the training CSV file.")
     parser.add_argument(
         "--output_model_path", type=str, help="Path to save the trained model."

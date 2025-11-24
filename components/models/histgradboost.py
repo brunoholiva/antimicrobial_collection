@@ -1,5 +1,8 @@
 from sklearn.ensemble import HistGradientBoostingClassifier
-from sklearn.model_selection import RandomizedSearchCV
+from sklearn.feature_selection import SelectKBest, VarianceThreshold, f_classif
+from sklearn.pipeline import Pipeline
+from skopt import BayesSearchCV
+from skopt.space import Real, Integer
 import pandas as pd
 import joblib
 import argparse
@@ -11,30 +14,37 @@ def main(args):
     X_train = train_df.drop(columns=[args.activity_col])
     y_train = train_df[args.activity_col]
 
-    model = HistGradientBoostingClassifier(
-        random_state=args.random_state, class_weight="balanced"
+    pipeline = Pipeline(
+        [
+            ("variance", VarianceThreshold()),
+            ("select", SelectKBest(score_func=f_classif)),
+            (
+                "model",
+                HistGradientBoostingClassifier(
+                    random_state=args.random_state, class_weight="balanced"
+                ),
+            ),
+        ]
     )
 
-    param_grid = {
-        "learning_rate": [0.01, 0.1, 0.2, 0.3],
-        "max_iter": [100, 200, 300, 400, 500],
-        "min_samples_leaf": [20, 50, 100, 200],
-        "l2_regularization": [0.0, 0.1, 0.2, 0.3],
-        "min_samples_leaf": [15, 20, 25, 30, 40],
-    }
-
-    grid_search = RandomizedSearchCV(
-        estimator=model,
-        param_distributions=param_grid,
-        cv=10,
+    opt = BayesSearchCV(
+        estimator=pipeline,
+        search_spaces={
+            "select__k": Integer(16, X_train.shape[1]),
+            "model__learning_rate": Real(0.01, 0.3, prior="log-uniform"),
+            "model__max_iter": Integer(100, 500),
+            "model__min_samples_leaf": Integer(20, 200),
+            "model__l2_regularization": Real(0.0, 0.3),
+        },
+        cv=3,
+        n_iter=1000,
         scoring="average_precision",
-        n_iter=500,
         n_jobs=args.n_jobs,
         verbose=2,
     )
 
-    grid_search.fit(X_train, y_train)
-    model = grid_search.best_estimator_
+    opt.fit(X_train, y_train)
+    model = opt.best_estimator_
     model.fit(X_train, y_train)
     joblib.dump(model, args.output_model_path)
 
