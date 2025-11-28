@@ -22,7 +22,7 @@ def main(args):
             (
                 "model",
                 RandomForestClassifier(
-                    random_state=args.random_state, class_weight="balanced"
+                    random_state=args.random_state, class_weight="balanced", n_jobs=args.n_jobs
                 ),
             ),
         ]
@@ -31,7 +31,7 @@ def main(args):
     opt = BayesSearchCV(
         estimator=pipeline,
         search_spaces={
-            "select__k": Integer(64, 1024),
+            "select__k": Integer(16, X_train.shape[1]),
             "model__n_estimators": Integer(100, 1000),
             "model__max_depth": Integer(5, 50),
             "model__min_samples_split": Integer(2, 10),
@@ -40,14 +40,14 @@ def main(args):
             "model__max_features": Categorical(["sqrt", "log2"]),
         },
         scoring="average_precision",
-        cv=3,
-        n_iter=1000,
-        n_jobs=5,
+        cv=300,
+        n_iter=3,
+        n_jobs=1,
+        random_state=args.random_state
     )
 
     opt.fit(X_train, y_train)
     model = opt.best_estimator_
-    model.fit(X_train, y_train)
     joblib.dump(model, args.output_model_path)
 
 

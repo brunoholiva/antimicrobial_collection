@@ -18,7 +18,7 @@ def main(args):
         [
             ("variance", VarianceThreshold()),
             ("select", SelectKBest(score_func=f_classif)),
-            ("model", GaussianProcessClassifier(random_state=args.random_state)),
+            ("model", GaussianProcessClassifier(random_state=args.random_state, n_jobs=args.n_jobs)),
         ]
     )
 
@@ -30,16 +30,16 @@ def main(args):
             "model__max_iter_predict": Integer(50, 400),
         },
         cv=3,
-        n_iter=1000,
+        n_iter=50,
         scoring="average_precision",
-        n_jobs=args.n_jobs,
+        n_jobs=1,
         verbose=2,
+        random_state=args.random_state
     )
 
 
     opt.fit(X_train, y_train)
     model = opt.best_estimator_
-    model.fit(X_train, y_train)
     joblib.dump(model, args.output_model_path)
 
 

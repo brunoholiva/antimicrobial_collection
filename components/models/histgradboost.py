@@ -37,15 +37,15 @@ def main(args):
             "model__l2_regularization": Real(0.0, 0.3),
         },
         cv=3,
-        n_iter=1000,
+        n_iter=300,
         scoring="average_precision",
         n_jobs=args.n_jobs,
         verbose=2,
+        random_state=args.random_state
     )
 
     opt.fit(X_train, y_train)
     model = opt.best_estimator_
-    model.fit(X_train, y_train)
     joblib.dump(model, args.output_model_path)
 
 
