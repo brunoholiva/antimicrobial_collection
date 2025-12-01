@@ -1,54 +1,37 @@
-from src.split_data import murcko_scaffold_split
 import argparse
 import pandas as pd
+from rdkit.Chem.Scaffolds import MurckoScaffold
+from sklearn.model_selection import StratifiedGroupKFold
 
 
 def main(args):
     df = pd.read_csv(args.input_csv)
-    train_df, test_df = murcko_scaffold_split(
-        df,
-        smiles_col=args.smiles_col,
-        activity_col=args.activity_col,
-        test_size=args.test_size,
-        random_state=args.random_state,
-    )
-    train_df = train_df[[args.smiles_col, args.activity_col]]
-    test_df = test_df[[args.smiles_col, args.activity_col]]
 
-    train_df.to_csv(args.train_output_csv, index=False)
-    test_df.to_csv(args.test_output_csv, index=False)
+    scaffolds = df[args.smiles_col].apply(
+        lambda x: MurckoScaffold.MurckoScaffoldSmiles(mol=None, smiles=x)
+    )
+
+    gkf = StratifiedGroupKFold(n_splits=args.k_folds, shuffle=True, random_state=args.random_state)
+    df["cv_fold"] = -1
+
+    X_dummy = df.drop(columns=[args.activity_col])
+    y_dummy = df[args.activity_col]
+
+    for fold_id, (train_idx, val_idx) in enumerate(
+        gkf.split(X_dummy, y_dummy, groups=scaffolds)
+    ):
+        df.iloc[val_idx, df.columns.get_loc("cv_fold")] = fold_id
+
+    df.to_csv(args.output_csv, index=False)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Murcko Scaffold Splitter")
-    parser.add_argument("--input_csv", type=str, help="Path to the input CSV file.")
-    parser.add_argument(
-        "--train_output_csv", type=str, help="Path to save the training set CSV file."
-    )
-    parser.add_argument(
-        "--test_output_csv", type=str, help="Path to save the test set CSV file."
-    )
-    parser.add_argument(
-        "--smiles_col",
-        type=str,
-        default="standardized_smiles",
-        help="Column name for SMILES strings.",
-    )
-    parser.add_argument(
-        "--activity_col",
-        type=str,
-        default="antimicrobial_activity",
-        help="Column name for activity labels.",
-    )
-    parser.add_argument(
-        "--test_size",
-        type=float,
-        default=0.2,
-        help="Proportion of the dataset to include in the test split.",
-    )
-    parser.add_argument(
-        "--random_state", type=int, default=333, help="Random seed for reproducibility."
-    )
-
+    parser = argparse.ArgumentParser(description="Scaffold-based K-Fold Splitter")
+    parser.add_argument("--input_csv", type=str, required=True, help="Path to input CSV file")
+    parser.add_argument("--output_csv", type=str, required=True, help="Path to output CSV file")
+    parser.add_argument("--smiles_col", type=str, default="standardized_smiles", help="Column name for SMILES strings")
+    parser.add_argument("--activity_col", type=str, default="antimicrobial_activity", help="Column name for activity labels")
+    parser.add_argument("--random_state", type=int, default=333, help="Random seed for reproducibility")
+    parser.add_argument("--k_folds", type=int, default=3, help="Number of folds for K-Fold splitting")
     args = parser.parse_args()
     main(args)

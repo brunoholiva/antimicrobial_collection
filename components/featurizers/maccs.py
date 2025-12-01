@@ -21,7 +21,8 @@ def main(args):
 
     fp_df = pd.DataFrame(fingerprints, columns=[f"maccs_key_{i}" for i in range(167)])
     df = pd.concat([df, fp_df], axis=1)
-    df = df.drop(columns=[args.smiles_col])
+    cols_to_keep = [col for col in df.columns if col.startswith("maccs_key_") or col in ["cv_fold", args.activity_col]]
+    df = df[cols_to_keep]
     df.to_csv(args.output_csv, index=False)
 
 if __name__ == "__main__":
@@ -36,6 +37,11 @@ if __name__ == "__main__":
         default="standardized_smiles",
         help="Column name for SMILES strings.",
     )
-
+    parser.add_argument(
+        "--activity_col",
+        type=str,
+        default="antimicrobial_activity",
+        help="Column name for activity labels.",
+    )
     args = parser.parse_args()
     main(args)

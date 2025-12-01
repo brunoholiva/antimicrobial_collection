@@ -1,37 +1,23 @@
+#!/usr/bin/env nextflow
+
 process RUN_EVALUATOR {
-
-    tag "Evaluate: ${dataset.baseName} - ${splitter.baseName} - ${featurizer.baseName} - ${model.baseName} - ${evaluator.baseName}"
-
-    publishDir "${params.outdir}/${dataset.baseName}_${splitter.baseName}_${featurizer.baseName}_${model.baseName}", mode: 'copy'
+    tag "Parse: ${model.baseName}"
 
     input:
-    tuple val(dataset), val(splitter), val(featurizer), val(model), path(test_features), path(trained_model), val(evaluator)
+    tuple val(dataset), val(splitter), val(featurizer), val(model), path("raw_results.csv")
+    path parser_script
 
     output:
-    path ("results.csv"), emit: results_csv
-    path (trained_model), emit: published_model
-    path ("confusion_matrix.png"), emit: confusion_matrix
+    path("clean_results.csv"), emit: clean_results
+
     script:
-
-    def dataset_name = dataset.baseName
-    def splitter_name = splitter.baseName
-    def featurizer_name = featurizer.baseName
-    def model_name = model.baseName
-    def evaluator_name = evaluator.baseName
-
     """
-    python ${evaluator} \\
-        --model_path ${trained_model} \\
-        --test_csv ${test_features} \\
-        --activity_col ${params.activity_col} \\
-        --output_results results.csv \\
-        --output_confusion_matrix confusion_matrix.png \\
-        --output_rocauc_plot roc_auc_curve.png \\
-        --random_state ${params.random_state} \\
-        --dataset_name ${dataset_name} \\
-        --split_name ${splitter_name} \\
-        --featurizer_name ${featurizer_name} \\
-        --model_name ${model_name} \\
-        --evaluator_name ${evaluator_name}
+    python ${parser_script} \
+        --input_csv raw_results.csv \
+        --output_csv clean_results.csv \
+        --dataset_name ${dataset.baseName} \
+        --splitter_name ${splitter.baseName} \
+        --featurizer_name ${featurizer.baseName} \
+        --model_name ${model.baseName}
     """
 }

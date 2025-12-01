@@ -26,34 +26,18 @@ def main(args):
         fingerprints, columns=[f"morgan_bit_{i}" for i in range(args.n_bits)]
     )
     df = pd.concat([df, fp_df], axis=1)
-    df = df.drop(columns=[args.smiles_col])
+    cols_to_keep = [col for col in df.columns if col.startswith("morgan_bit_") or col in ["cv_fold", args.activity_col]]
+    df = df[cols_to_keep]
     df.to_csv(args.output_csv, index=False)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Morgan Fingerprint Featurizer")
     parser.add_argument("--input_csv", type=str, help="Path to the input CSV file.")
-    parser.add_argument(
-        "--output_csv", type=str, help="Path to save the output CSV file."
-    )
-    parser.add_argument(
-        "--smiles_col",
-        type=str,
-        default="standardized_smiles",
-        help="Column name for SMILES strings.",
-    )
-    parser.add_argument(
-        "--radius",
-        type=int,
-        default=2,
-        help="Radius for Morgan fingerprint.",
-    )
-    parser.add_argument(
-        "--n_bits",
-        type=int,
-        default=2048,
-        help="Number of bits for Morgan fingerprint.",
-    )
-
+    parser.add_argument("--output_csv", type=str, help="Path to save the output CSV file.")
+    parser.add_argument("--smiles_col", type=str, default="standardized_smiles", help="Column name for SMILES strings.")
+    parser.add_argument("--radius", type=int, default=2, help="Radius for Morgan fingerprint.")
+    parser.add_argument("--n_bits", type=int, default=2048, help="Number of bits for Morgan fingerprint.")
+    parser.add_argument("--activity_col", type=str, default="antimicrobial_activity", help="Column name for activity labels.")
     args = parser.parse_args()
     main(args)
