@@ -40,8 +40,8 @@ def main(args):
             "model__max_features": Categorical(["sqrt", "log2"]),
         },
         scoring="average_precision",
-        cv=300,
-        n_iter=3,
+        cv=3,
+        n_iter=300,
         n_jobs=1,
         random_state=args.random_state
     )
