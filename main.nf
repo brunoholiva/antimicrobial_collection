@@ -19,7 +19,9 @@ workflow {
 
     RUN_TRAINER(RUN_FEATURIZER.out.features.combine(ch_models))
 
-    RUN_EVALUATOR(RUN_TRAINER.out.cv_results, ch_metrics)
+    ch_eval_input = RUN_TRAINER.out.models.join(RUN_TRAINER.out.cv_results, by: [0,1,2,3])
+    
+    RUN_EVALUATOR(ch_eval_input, ch_metrics)
 
     RUN_EVALUATOR.out.clean_results.collectFile(
         name: "final_summary.csv",

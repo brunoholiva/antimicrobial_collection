@@ -4,7 +4,7 @@ process RUN_EVALUATOR {
     tag "Parse: ${model.baseName}"
 
     input:
-    tuple val(dataset), val(splitter), val(featurizer), val(model), path("raw_results.csv")
+    tuple val(dataset), val(splitter), val(featurizer), val(model), path(trained_model_file), path("raw_results.csv")
     path parser_script
 
     output:
@@ -18,6 +18,7 @@ process RUN_EVALUATOR {
         --dataset_name ${dataset.baseName} \
         --splitter_name ${splitter.baseName} \
         --featurizer_name ${featurizer.baseName} \
-        --model_name ${model.baseName}
+        --model_name ${model.baseName} \
+        --model_path ${trained_model_file}
     """
 }

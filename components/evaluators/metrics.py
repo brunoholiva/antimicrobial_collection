@@ -25,6 +25,7 @@ def main(args):
         "Splitter": args.splitter_name,
         "Featurizer": args.featurizer_name,
         "Model": args.model_name,
+        "Model_characteristics": args.model_path,
         "Mean_AP": round(best_row['mean_test_score'], 4),
         "Std_AP": round(best_row['std_test_score'], 4),
     }
@@ -41,5 +42,6 @@ if __name__ == "__main__":
     parser.add_argument("--splitter_name", type=str, required=True)
     parser.add_argument("--featurizer_name", type=str, required=True)
     parser.add_argument("--model_name", type=str, required=True)
+    parser.add_argument("--model_path", type=str, required=True)
     args = parser.parse_args()
     main(args)
